@@ -1,3 +1,4 @@
+# flake8: noqa
 try:
     import asyncio
 except ImportError:
@@ -30,6 +31,8 @@ config = {
 from .observable import Observable
 from .anonymousobservable import AnonymousObservable
 from .observer import Observer
+from .observablequery import ObservableQuery
+from .qbservable import Qbservable
 
 from . import checkedobserver
 from . import linq

@@ -6,6 +6,7 @@ from . import amb
 from . import and_
 from . import some
 from . import asobservable
+from . import asqbservable
 from . import average
 from . import buffer
 from . import bufferwithtime

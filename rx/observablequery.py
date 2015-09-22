@@ -1,5 +1,5 @@
 import ast
-from . import astdump
+from . import astdump, astpp
 
 from .abstractobserver import AbstractObserver
 from .observer import Observer
@@ -65,21 +65,20 @@ class ObservableQuery(Qbservable):
 
         if not self.source:
             rewriter = ObservableRewriter()
-            body = self.expression #rewriter.visit(self.expression)
+            body = rewriter.visit(self.expression)
 
-            print("------------")
-            print(ast.dump(body))
-            print("------------")
             # f = ast.Lambda("", body)
+            print(astpp.dump(body))
+            body = ast.fix_missing_locations(body)
+            code = compile(body, filename="<ast>", mode="eval")
 
-            ast.fix_missing_locations(body)
-            self.source = eval(compile(body, filename="<ast>", mode="eval"))
+            print("*****************")
+            print(self.source)
+            self.source = eval(code, {}, rewriter.names)
 
         return self.source.subscribe(observer)
 
     def __str__(self):
-        print("ObservableQuery:__str__")
-
         c = self.expression
         if c and getattr(c, "id", None) == self:
             if self.source:
@@ -88,21 +87,29 @@ class ObservableQuery(Qbservable):
 
             return "null"
 
-        def printcb(node, stack):
-            nodename = node.__class__.__name__
-            print(' '*len(stack)*2 + nodename)
-
-        td = astdump.TreeDumper()
-        td.dump(self.expression, callback=printcb)
-
         return ast.dump(self.expression)
 
 
 class ObservableRewriter(ast.NodeTransformer):
+    def __init__(self):
+        self.names = {}
+        self.incr = 0
+        super(ObservableRewriter, self).__init__()
 
     def visit_Name(self, node):
-        print("visit_Name")
-        self.generic_visit(node)
+        query = node.id if isinstance(node.id, ObservableQuery) else None
+        if query:
+            source = query.source
+            if source:
+                name = "local%d" % self.incr
+                self.incr += 1
+                self.names[name] = source
+                return ast.Name(id=name, ctx=ast.Load())
+            else:
+                return Visit(query.Expression)
+
+        return node
+        #self.generic_visit(node)
 
     def visit_Module(self, node):
         print("visit_Module")

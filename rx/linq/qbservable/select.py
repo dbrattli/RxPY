@@ -21,17 +21,14 @@ def select(self, selector):
     Returns an observable sequence whose elements are the result of
     invoking the transform function on each element of source.
     """
-    print("****")
-    print(ast.dump(self.expression))
-
     sel = ast.parse(selector, mode="eval")
 
     expr = ast.Expression(
         body=ast.Call(
             func=ast.Attribute(
-                value=ast.Name(id=self, ctx=ast.Load()),
+                value=self.expression, #ast.Name(id=self, ctx=ast.Load()),
                 attr='select', ctx=ast.Load()),
-            args=[sel], keywords=[], starargs=None, kwargs=None))
+            args=[sel.body], keywords=[], starargs=None, kwargs=None))
 
     print(ast.dump(expr))
 

@@ -18,7 +18,6 @@ class ObservableQueryProvider(object):
         return ast.dump(self.expression)
 
     def __str__(self):
-        print("qbservableQueryProvider:__str__")
         return self.__repr__()
 
 
@@ -67,13 +66,13 @@ class ObservableQuery(Qbservable):
             rewriter = ObservableRewriter()
             body = rewriter.visit(self.expression)
 
-            # f = ast.Lambda("", body)
-            print(astpp.dump(body))
-            body = ast.fix_missing_locations(body)
-            code = compile(body, filename="<ast>", mode="eval")
+            expr = ast.Expression(body=body)
+            #print(astpp.dump(expr))
+            expr = ast.fix_missing_locations(expr)
+            code = compile(expr, filename="<ast>", mode="eval")
 
-            print("*****************")
-            print(self.source)
+            #print("*****************")
+            #print(self.source)
             self.source = eval(code, {}, rewriter.names)
 
         return self.source.subscribe(observer)
@@ -82,10 +81,10 @@ class ObservableQuery(Qbservable):
         c = self.expression
         if c and getattr(c, "id", None) == self:
             if self.source:
-                print(ast.dump(self.expression))
+                #print(ast.dump(self.expression))
                 return str(self.source)
 
-            return "null"
+            return "None"
 
         return ast.dump(self.expression)
 
@@ -110,10 +109,6 @@ class ObservableRewriter(ast.NodeTransformer):
 
         return node
         #self.generic_visit(node)
-
-    def visit_Module(self, node):
-        print("visit_Module")
-        self.generic_visit(node)
 
     def visit_method_call(self, node):
         pass

@@ -23,13 +23,10 @@ def select(self, selector):
     """
     sel = ast.parse(selector, mode="eval")
 
-    expr = ast.Expression(
-        body=ast.Call(
+    expr = ast.Call(
             func=ast.Attribute(
-                value=self.expression, #ast.Name(id=self, ctx=ast.Load()),
+                value=self.expression,
                 attr='select', ctx=ast.Load()),
-            args=[sel.body], keywords=[], starargs=None, kwargs=None))
-
-    print(ast.dump(expr))
+            args=[sel.body], keywords=[], starargs=None, kwargs=None)
 
     return self.provider.create_query(expr)

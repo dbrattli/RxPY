@@ -1,5 +1,6 @@
 import ast
-from . import astdump, astpp
+
+import astor
 
 from .abstractobserver import AbstractObserver
 from .observer import Observer
@@ -14,8 +15,7 @@ class ObservableQueryProvider(object):
         return ObservableQuery(expression=expression)
 
     def __repr__(self):
-        astdump.dumpattrs(self.expression)
-        return ast.dump(self.expression)
+        return astor.to_source(self.expression)
 
     def __str__(self):
         return self.__repr__()
@@ -86,7 +86,7 @@ class ObservableQuery(Qbservable):
 
             return "None"
 
-        return ast.dump(self.expression)
+        return astor.to_source(self.expression)
 
 
 class ObservableRewriter(ast.NodeTransformer):

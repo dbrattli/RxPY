@@ -17,6 +17,7 @@ setup(
     license='Apache License',
     url='http://reactivex.io',
     download_url = 'https://github.com/ReactiveX/RxPY',
+    install_requires = ['astor'],
     zip_safe = True,
 
     # https://pypi.python.org/pypi?%3Aaction=list_classifiers

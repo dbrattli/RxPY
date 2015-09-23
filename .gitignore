@@ -56,3 +56,5 @@ TestResults/Rx.TE.Tests_log.ldf
 .zedstate
 
 .ipynb_checkpoints
+*.ncrunchproject
+*.ncrunchsolution

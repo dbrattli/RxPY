@@ -67,13 +67,10 @@ class ObservableQuery(Qbservable):
             body = rewriter.visit(self.expression)
 
             expr = ast.Expression(body=body)
-            #print(astpp.dump(expr))
             expr = ast.fix_missing_locations(expr)
             code = compile(expr, filename="<ast>", mode="eval")
 
-            #print("*****************")
-            #print(self.source)
-            self.source = eval(code, {}, rewriter.names)
+            self.source = eval(code, {}, rewriter.free_names)
 
         return self.source.subscribe(observer)
 
@@ -91,7 +88,7 @@ class ObservableQuery(Qbservable):
 
 class ObservableRewriter(ast.NodeTransformer):
     def __init__(self):
-        self.names = {}
+        self.free_names = {}
         self.incr = 0
         super(ObservableRewriter, self).__init__()
 
@@ -102,13 +99,12 @@ class ObservableRewriter(ast.NodeTransformer):
             if source:
                 name = "local%d" % self.incr
                 self.incr += 1
-                self.names[name] = source
+                self.free_names[name] = source
                 return ast.Name(id=name, ctx=ast.Load())
             else:
                 return Visit(query.Expression)
 
         return node
-        #self.generic_visit(node)
 
     def visit_method_call(self, node):
         pass

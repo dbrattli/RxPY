@@ -12,18 +12,7 @@ subscribed = ReactiveTest.subscribed
 disposed = ReactiveTest.disposed
 created = ReactiveTest.created
 
-class TestAsQbservable(unittest.TestCase):
-
-    def test_as_qbservable_noop(self):
-        scheduler = TestScheduler()
-        xs = scheduler.create_hot_observable(on_next(100, 1), on_next(200, 2), on_next(500, 3), on_next(600, 4))
-        results = scheduler.create_observer()
-
-        def create():
-            return xs.as_qbservable()
-
-        results = scheduler.start(create)
-        results.messages.assert_equal(on_next(500, 3), on_next(600, 4))
+class TestAsObservable(unittest.TestCase):
 
     def test_as_qubservale_select_where(self):
         scheduler = TestScheduler()
@@ -31,7 +20,7 @@ class TestAsQbservable(unittest.TestCase):
         results = scheduler.create_observer()
 
         def create():
-            return xs.select(lambda x: x*10).as_qbservable().where("lambda x: x<40")
+            return xs.as_qbservable().select("lambda x: x*10").as_observable().where(lambda x: x<40)
 
         results = scheduler.start(create)
         results.messages.assert_equal(on_next(500, 30))

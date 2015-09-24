@@ -4,6 +4,8 @@ from .observer import Observer
 
 
 class Qbservable(object):
+    """A queryable observable (Qbservable for short)
+    """
     def __init__(self, subscribe, provider, expression):
         self._subscribe = subscribe
 
@@ -26,5 +28,4 @@ class Qbservable(object):
         return self._provider
 
     def __str__(self):
-        print("Qbservable:__str__")
         return str(self.provider)

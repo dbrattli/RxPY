@@ -6,22 +6,21 @@ from rx.internal import extensionmethod
 
 @extensionmethod(Qbservable, alias="filter")
 def where(self, predicate):
-    """Filters the elements of an observable sequence based on a predicate
-    by incorporating the element's index.
+    """Filters the elements of an qbservable sequence based on a
+    predicate by incorporating the element's index.
 
-    1 - source.filter(lambda value: value < 10)
-    2 - source.filter(lambda value, index: value < 10 or index < 10)
+    1 - source.filter("lambda value: value < 10")
+    2 - source.filter("lambda value, index: value < 10 or index < 10")
 
     Keyword arguments:
     :param Observable self: Observable sequence to filter.
-    :param (T, <int>) -> bool predicate: A function to test each source element
-        for a condition; the
-        second parameter of the function represents the index of the source
-        element.
+    :param ast predicate: A function to test each source element
+        for a condition; the second parameter of the ast function
+        represents the index of the source element.
 
-    :returns: An observable sequence that contains elements from the input
-    sequence that satisfy the condition.
-    :rtype: Observable
+    :returns: An observable sequence that contains elements from the
+    input sequence that satisfy the condition.
+    :rtype: Qbservable
     """
     pred = ast.parse(predicate, mode="eval")
 

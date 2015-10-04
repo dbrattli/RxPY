@@ -7,12 +7,12 @@ from .observer import Observer
 from .qbservable import Qbservable
 
 
-class ObservableQueryProvider(object):
+class BonsaiQueryProvider(object):
     def create_query(self, expression):
         if not expression:
             raise NotImplementedError
 
-        return ObservableQuery(expression=expression)
+        return BonsaiQuery(expression=expression)
 
     def __repr__(self):
         return astor.to_source(self.expression)
@@ -21,14 +21,14 @@ class ObservableQueryProvider(object):
         return self.__repr__()
 
 
-class ObservableQuery(Qbservable):
+class BonsaiQuery(Qbservable):
     def __init__(self, source=None, expression=None):
         self.source = source
         self.expression = expression or ast.Name(self, ast.Load())
 
-        provider = ObservableQueryProvider()
+        provider = BonsaiQueryProvider()
 
-        super(ObservableQuery, self).__init__(self._subscribe, provider, self.expression)
+        super(BonsaiQuery, self).__init__(self._subscribe, provider, self.expression)
 
     def _subscribe(self, on_next=None, on_error=None, on_completed=None,
                    observer=None):
@@ -63,14 +63,10 @@ class ObservableQuery(Qbservable):
             observer = Observer(on_next, on_error, on_completed)
 
         if not self.source:
-            rewriter = ObservableRewriter()
-            body = rewriter.visit(self.expression)
-
-            expr = ast.Expression(body=body)
-            expr = ast.fix_missing_locations(expr)
-            code = compile(expr, filename="<ast>", mode="eval")
-
-            self.source = eval(code, {}, rewriter.free_names)
+            print(astor.dump(self.expression))
+            bonsai = BonsaiCompiler()
+            json = bonsai.visit(self.expression)
+            print("JSON: %s" % json)
 
         return self.source.subscribe(observer)
 
@@ -85,22 +81,44 @@ class ObservableQuery(Qbservable):
         return astor.to_source(self.expression)
 
 
-class ObservableRewriter(ast.NodeTransformer):
+class BonsaiCompiler(ast.NodeVisitor):
     def __init__(self):
-        self.free_names = {}
-        self.incr = 0
-        super(ObservableRewriter, self).__init__()
+        self.json = None
+
+        super(BonsaiCompiler, self).__init__()
+
+    def visit_Attribute(self, node):
+        print("visit_Attribute")
+        return [self.visit(node.value), node.attr]
+
+    def visit_BinOp(self, node):
+        ops = {
+            ast.Mult: "*",
+            ast.Add: "+",
+            ast.And: "&",
+            ast.Sub: "-",
+            ast.Div: "/",
+            ast.Mod: "%",
+            ast.LShift: "<<",
+            ast.RShift: ">>",
+            ast.BitAnd: "&",
+            ast.BitOr: "|",
+            ast.BitXor: "^"
+        }
+
+        return [ops[type(node.op)], self.visit(node.left), self.visit(node.right)]
+
+    def visit_Call(self, node):
+        func = self.visit(node.func)
+        args = [self.visit(arg) for arg in node.args]
+
+        return [".()", func[1], func[0][1], args]
+
+    def visit_Lambda(self, node):
+        return ["=>", self.visit(node.body), [self.visit(arg) for arg in node.args.args]]
+
+    def visit_Num(self, node):
+        return [":", node.n]
 
     def visit_Name(self, node):
-        query = node.id if isinstance(node.id, ObservableQuery) else None
-        if not query:
-            return node
-
-        source = query.source
-        if source:
-            name = "_free%d" % self.incr
-            self.incr += 1
-            self.free_names[name] = source
-            return ast.Name(id=name, ctx=ast.Load())
-
-        return self.visit(query.expression)
+        return [":", node.id]

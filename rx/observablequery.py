@@ -80,7 +80,7 @@ class ObservableQuery(Qbservable):
             if self.source:
                 return str(self.source)
 
-            return "None"
+            return "ObservableQuery"
 
         return astor.to_source(self.expression)
 

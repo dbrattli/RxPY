@@ -1,3 +1,4 @@
+import json
 import ast
 
 import astor
@@ -65,18 +66,21 @@ class BonsaiQuery(Qbservable):
         if not self.source:
             print(astor.dump(self.expression))
             bonsai = BonsaiCompiler()
-            json = bonsai.visit(self.expression)
-            print("JSON: %s" % json)
+            output = bonsai.visit(self.expression)
+            print(json.dumps(output, indent="   "))
 
-        return self.source.subscribe(observer)
+        #return self.source.subscribe(observer)
+
+    def __repr__(self):
+        return str(self)
 
     def __str__(self):
-        c = self.expression
-        if c and getattr(c, "id", None) == self:
+        expr = self.expression
+        if expr and getattr(expr, "id", None) == self:
             if self.source:
                 return str(self.source)
 
-            return "None"
+            return "BonsaiQuery"
 
         return astor.to_source(self.expression)
 
@@ -88,7 +92,8 @@ class BonsaiCompiler(ast.NodeVisitor):
         super(BonsaiCompiler, self).__init__()
 
     def visit_Attribute(self, node):
-        print("visit_Attribute")
+        #print("visit_Attribute")
+        #print(node.attr)
         return [self.visit(node.value), node.attr]
 
     def visit_BinOp(self, node):
@@ -108,17 +113,65 @@ class BonsaiCompiler(ast.NodeVisitor):
 
         return [ops[type(node.op)], self.visit(node.left), self.visit(node.right)]
 
+    def visit_UnaryOp(self, node):
+        ops = {
+            ast.Invert: "~",
+            ast.Not: "!",
+            ast.UAdd: "+",
+            ast.USub: "-"
+        }
+
+        op = ops[type(node.op)]
+        return [op, self.visit(node.operand)]
+
     def visit_Call(self, node):
-        func = self.visit(node.func)
+        attr= self.visit(node.func)
         args = [self.visit(arg) for arg in node.args]
 
-        return [".()", func[1], func[0][1], args]
+        method = attr[1]
+        source = attr[0]
+
+        return [".()", method, source, args]
+
+    def visit_arg(self, node):
+        return ["$", node.arg]
+
+    def visit_Str(self, node):
+        return "%s" % node.s
+
+    def visit_Compare(self, node):
+        #print("visit_Compare")
+        #print(node.left)
+        #print(node.ops)
+        #print(node.comparators)
+        ops = {
+            ast.Eq: "=",
+            ast.NotEq: "!=",
+            ast.Lt: "<",
+            ast.LtE: "<=",
+            ast.Gt: ">",
+            ast.GtE: ">=",
+            #ast.Is: ""
+            #ast.IsNot: "",
+            #ast.In "",
+            #ast.NotIn: ""
+        }
+        op = ops[type(node.ops[0])]
+        return [ op, self.visit(node.left), self.visit(node.comparators[0]) ]
 
     def visit_Lambda(self, node):
-        return ["=>", self.visit(node.body), [self.visit(arg) for arg in node.args.args]]
+        args = [self.visit(arg) for arg in node.args.args]
+        #print(args)
+        #print(node.args.args[0].arg)
+
+        return ["=>", self.visit(node.body), args]
 
     def visit_Num(self, node):
         return [":", node.n]
 
     def visit_Name(self, node):
-        return [":", node.id]
+        return [":", str(node.id)]
+
+    def generic_visit(self, node):
+        print("generic_visit")
+        print(node)

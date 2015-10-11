@@ -9,7 +9,7 @@ class Qbservable(object):
     def __init__(self, subscribe, provider, expression):
         self._subscribe = subscribe
 
-        self._provider = provider
+        self.provider = provider
         self.expression = expression
 
         self.lock = Lock()
@@ -22,10 +22,6 @@ class Qbservable(object):
             observer = Observer(on_next, on_error, on_completed)
 
         return self._subscribe(observer)
-
-    @property
-    def provider(self):
-        return self._provider
 
     def __str__(self):
         return str(self.provider)

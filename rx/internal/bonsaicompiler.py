@@ -12,8 +12,6 @@ class BonsaiCompiler(ast.NodeVisitor):
         return ["$", node.arg]
 
     def visit_Attribute(self, node):
-        print("visit_Attribute")
-        print(node.attr)
         return [".", node.attr, self.visit(node.value)]
 
     def visit_BinOp(self, node):
@@ -42,9 +40,10 @@ class BonsaiCompiler(ast.NodeVisitor):
         print(node.func)
         print(attr)
 
-        if attr is ast.Attribute:
-            source = attr[1]
-            method = attr[2]
+        if isinstance(node.func, ast.Attribute):
+            source = attr[2]
+            method = attr[1]
+            1/0
             return [".()", method, source, args]
         else:
             func = attr[1]
